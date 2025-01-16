@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator')
 const { reminder } = require('../models/api.model')
-const mailer = require('../services/mailer')
+//const mailer = require('mailerjs')
+const pixmail = require('pixmail')
 
 const processAdd = async (req, res) => {
   const errors = validationResult(req)
@@ -36,9 +37,10 @@ const processAdd = async (req, res) => {
         pass: process.env.SMTP_PASS,
         recipientEmail: data.email,
         subject: 'Reminder Set Successful',
-        body: `Your reminder ${data.title} has been set successfully, you'll get reminder email on ${data.date}\n Thanks for chossing notifyme`
+        body: `Your ${data.title} reminder has been set successfully, you'll get reminder email on ${data.date}\n Thanks for chossing notifyme`
       }
-      const mailSent = await mailer(smtpData)
+      //const mailSent = await mailer(smtpData)
+      const mailSent = await pixmail(smtpData)
       return res.status(201).json({
         statusCode: 201,
         msg: 'Succesfully set reminder'
