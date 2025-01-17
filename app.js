@@ -3,6 +3,7 @@ const express = require('express')
 const app = express()
 const path = require('path')
 const port = process.env.PORT
+require('./src/workers/runWorker.js')
 const apiRoutes = require('./src/routes/api.route')
 
 app.set('view aengine', 'ejs')

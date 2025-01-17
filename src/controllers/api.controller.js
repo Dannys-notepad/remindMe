@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator')
 const { reminder } = require('../models/api.model')
-//const mailer = require('mailerjs')
+const { isValid, isPast, isDDay } = require('../utils/dateChecker.js')
 const pixmail = require('pixmail')
 
 const processAdd = async (req, res) => {
@@ -18,6 +18,21 @@ const processAdd = async (req, res) => {
     title,
     date
   }
+  
+  if(!isValid(date)){
+    return res.status(400).json({
+      statusCode: 400,
+      error: 'the date provided is not valid'
+    })
+  }
+  
+  if(isPast(date)){
+    return res.status(400).json({
+      statusCode: 400,
+      error: 'this date has already past'
+    })
+  }
+  
   try {
     let result 
     const Reminder = new reminder();
@@ -26,7 +41,7 @@ const processAdd = async (req, res) => {
       if(data.email === result.email && data.date === result.date){
         return res.status(400).json({
           statusCode: 400,
-          errorMsg: 'This reminder has already been set'
+          error: 'This reminder has already been set'
         })
       }
     }
@@ -37,9 +52,8 @@ const processAdd = async (req, res) => {
         pass: process.env.SMTP_PASS,
         recipientEmail: data.email,
         subject: 'Reminder Set Successful',
-        body: `Your ${data.title} reminder has been set successfully, you'll get reminder email on ${data.date}\n Thanks for chossing notifyme`
+        body: `Your ${data.title} reminder has been set successfully, you'll get an email reminder on the D-Day ${data.date}.\nThanks for chossing mail reminder.`
       }
-      //const mailSent = await mailer(smtpData)
       const mailSent = await pixmail(smtpData)
       return res.status(201).json({
         statusCode: 201,
@@ -53,8 +67,6 @@ const processAdd = async (req, res) => {
       errorMsg: 'Failed to set reminder'
     })
   }
-  
-  //console.log(req.body)
 }
 
 module.exports = {
