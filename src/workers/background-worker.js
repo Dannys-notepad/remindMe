@@ -1,27 +1,31 @@
-const pixmail = require('pixmail')
-const { parentPort } = require('worker_threads')
-const { reminder } = require('../models/api.model')
-const { isDDay } = require('../utils/dateChecker.js')
-const reminders = new reminder()
-let result, sent
-setInterval(async () => {
-  result = await reminders.all()
-  if(result){
-    for(let i = 0; i < result.length; i++){
-      if(isDDay(result[i].date)){
-        let configData = {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-          recipientEmail: result[i].email,
-          subject: `${result[i].title} Reminder`,
-          body: `Hello friend, it's the D-Day if your reminder. \nIt\'s ${result[i].title}. \nThanks for chossing email reminder.`
+const pixmail = require('pixmail');
+const { reminder } = require('../models/api.model');
+const { isDDay } = require('../utils/dateChecker.js');
+
+const reminders = new reminder();
+
+const sendReminders = async () => {
+  try {
+    const reminderData = await reminders.all();
+
+    if (reminderData) {
+      reminderData.forEach((reminder) => {
+        if (isDDay(reminder.date)) {
+          const configData = {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+            recipientEmail: reminder.email,
+            subject: `${reminder.title} Reminder`,
+            body: `Hello friend, it's the D-Day of your reminder. \nIt's ${reminder.title}. \nThanks for choosing email reminder.`,
+          };
+
+          await pixmail(configData);
         }
-        sent = await pixmail(configData)
-      }
+      });
     }
+  } catch (error) {
+    console.error('Error sending reminders:', error);
   }
-  /*result.forEach((d) => {
-    dates.push(d.ddate)
-  })*/
-  
-}, 60000 /* * 20*/);
+}
+
+setInterval(sendReminders, 60000);
