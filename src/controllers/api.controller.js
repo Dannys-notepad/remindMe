@@ -2,13 +2,21 @@ const { validationResult } = require('express-validator')
 const { reminder } = require('../models/api.model')
 const { isValid, isPast, isDDay } = require('../utils/dateChecker.js')
 const pixmail = require('pixmail')
+pixmail.setup({
+  user: process.env.SMTP_USER,
+  pass: process.env.SMTP_PASS
+})
+
+const renderForm = (req, res) => {
+  res.render('index')
+}
 
 const processAdd = async (req, res) => {
   const errors = validationResult(req)
   if(!errors.isEmpty()){
     return res.status(400).json({
       statusCode: 400,
-      error: errors
+      msg: errors
     })
   }
   
@@ -22,14 +30,14 @@ const processAdd = async (req, res) => {
   if(!isValid(date)){
     return res.status(400).json({
       statusCode: 400,
-      error: 'the date provided is not valid'
+      msg: 'the date provided is not valid'
     })
   }
   
   if(isPast(date)){
     return res.status(400).json({
       statusCode: 400,
-      error: 'this date has already past'
+      msg: 'this date has already past'
     })
   }
   
@@ -41,20 +49,19 @@ const processAdd = async (req, res) => {
       if(data.email === result.email && data.date === result.date){
         return res.status(400).json({
           statusCode: 400,
-          error: 'This reminder has already been set'
+          msg: 'This reminder has already been set'
         })
       }
     }
     result = await Reminder.add(data)
     if(result){
-      let smtpData = {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-        recipientEmail: data.email,
+      const mailSent = await pixmail.sendMail({
+        from: process.env.SMTP_USER,
+        to: data.email,
         subject: 'Reminder Set Successful',
-        body: `Your ${data.title} reminder has been set successfully, you'll get an email reminder on the D-Day ${data.date}.\nThanks for chossing mail reminder.`
-      }
-      const mailSent = await pixmail(smtpData)
+        body: `Your ${data.title} reminder has been set successfully, you'll get an email reminder on the D-Day ${data.date}. \nThanks for chossing mail reminder.`
+      })
+      
       return res.status(201).json({
         statusCode: 201,
         msg: 'Succesfully set reminder'
@@ -64,11 +71,12 @@ const processAdd = async (req, res) => {
     console.error(e)
     return res.status(500).json({
       statusCode: 500,
-      errorMsg: 'Failed to set reminder'
+      msg: 'Failed to set reminder'
     })
   }
 }
 
 module.exports = {
+  renderForm,
   processAdd
 }

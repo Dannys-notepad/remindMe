@@ -1,8 +1,8 @@
 const db = require('../config/db')
 
 class reminder{
-  async all(){
-    const [result] = await db.execute('SELECT * FROM reminder')
+  async match(date){
+    const [result] = await db.execute('SELECT * FROM reminder WHERE ddate = ?', [date])
     return result
   }
   
@@ -15,6 +15,11 @@ class reminder{
     const [result] = await db.execute('SELECT * FROM reminder WHERE title = ?', [title])
     return result[0]
   }
+  
+  async remove(id){
+    const [result] = await db.execute('DELETE FROM reminder WHERE id = ?', [id])
+    return result
+  }
 }
 
-module.exports ={  reminder }
+module.exports ={ reminder }

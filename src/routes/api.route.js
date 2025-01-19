@@ -1,7 +1,9 @@
 const express = require('express')
 const router = express.Router()
 const { check } = require('express-validator')
-const { processAdd } = require('../controllers/api.controller')
+const { renderForm, processAdd } = require('../controllers/api.controller')
+
+router.get('/add', renderForm)
 
 router.post('/add', [
   check('email').isEmail().normalizeEmail(),

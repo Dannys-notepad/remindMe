@@ -41,7 +41,19 @@ const isPast = (date) => {
 
   const specifiedDate = new Date(year, month, day);
 
-  return specifiedDate < presentDate;
+  if(year >= presentDate.getFullYear()){
+    return false
+  }
+  
+  if((presentDate.getMonth() === month) && (day > presentDate.getDate() || day === presentDate.getDate())){
+    return false
+  }
+  
+  if((month > presentDate.getMonth()) && (day ===  presentDate.getDate() || day > presentDate.getDate())){
+    return false
+  }
+  return 
+  //return specifiedDate < presentDate || specifiedDate === presentDate;
 };
 
 const isDDay = (date) => {
@@ -54,7 +66,7 @@ const isDDay = (date) => {
   const day = parseInt(sample[0], 10);
   const month = parseInt(sample[1], 10) - 1; // Month is zero-based
   const year = parseInt(sample[2], 10);
-
+  
   const specifiedDate = new Date(year, month, day);
 
   return specifiedDate.toDateString() === presentDate.toDateString();
